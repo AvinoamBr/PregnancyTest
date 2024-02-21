@@ -104,7 +104,6 @@ class TrainModel(object):
         plt.title('Training and Validation Loss')
         plt.show()
 
-CHECKPOINT_PATH = "/home/avinoam/workspace/Salignostics/pythonProject/checkpoints/"
 
 if __name__ == "__main__":
     parser = ArgumentParser()
