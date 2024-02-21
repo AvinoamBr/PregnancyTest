@@ -1,7 +1,10 @@
 import argparse
+import logging
 import os
+import sys
 
 from matplotlib import pyplot as plt
+from tqdm import tqdm
 from ultralytics import YOLO
 import glob
 import cv2
@@ -14,6 +17,14 @@ INNER_WINDOW = "inner_window"
 WINDOW = 'window'
 CLASS_NAMES = [STICKS, INNER_WINDOW, WINDOW]
 
+OKBLUE = '\033[94m'
+OKCYAN = '\033[96m'
+OKGREEN = '\033[92m'
+WARNING = '\033[93m'
+FAIL = '\033[91m'
+ENDC = '\033[0m'
+BOLD = '\033[1m'
+
 cp = "/home/avinoam/Desktop/autobrains/DL_Engineer/assignment_files/runs/detect/train14/weights/best.pt"
 model = YOLO(cp)
 
@@ -23,7 +34,8 @@ class PatternMatch(object):
     that present a better map for pregnant test markers.
     '''
     MATCH_SHAPE = (80,80)
-    def __init__(self):
+    def __init__(self, args):
+        self._args = args
         self._window = None
         self._standard_window = None
         self.vertical_edges = None
@@ -34,11 +46,10 @@ class PatternMatch(object):
     def plot(self):
         plt.subplots(2,3)
         for i,mat in enumerate((self._standard_window, self.vertical_edges, self.horizontal_edges,
-                                self._vertical_fixed,  self.marker_match, self.marker_candidates)):
+                                self.vertical_fixed, self.marker_match, self.marker_candidates)):
             plt.subplot(2,3,i+1)
             plt.imshow(mat)
         plt.show()
-
 
     def load(self,window):
         self._window = window
@@ -56,10 +67,10 @@ class PatternMatch(object):
         self.vertical_edges = image_mask * self.vertical_edges
         self.horizontal_edges = cv2.filter2D(src=reds, ddepth=-1, kernel=self.vertical_kernel).astype(np.int16)
         self.horizontal_edges = self.horizontal_edges * image_mask
-        self._vertical_fixed = self.vertical_edges - self.horizontal_edges
+        self.vertical_fixed = self.vertical_edges - self.horizontal_edges
 
     def find_markers_candidates(self):
-        marker_match = cv2.filter2D(src=self._vertical_fixed, ddepth=-1, kernel=self.marker_kernel).astype(np.int16)
+        marker_match = cv2.filter2D(src=self.vertical_fixed, ddepth=-1, kernel=self.marker_kernel).astype(np.int16)
         distance_filter =  gaussuian_filter(marker_match.shape)
         marker_match = marker_match * distance_filter
         marker_match[marker_match < 30] = 0
@@ -79,7 +90,7 @@ class PatternMatch(object):
         '''
         :return: a horizontal derivation kernel (to detect vertical lines)
         '''
-        if hasattr(self, "_horizontal_kernel"):
+        if hasattr(self, "_horizontal_kernel") and self._horizontal_kernel is not None:
             return self._horizontal_kernel
         horizontal_kernel = np.ones((7,9))
         mean = (horizontal_kernel.shape[1])/2
@@ -116,10 +127,13 @@ class PatternMatch(object):
         return marker_kernel
 
 class WindowDetector(object):
+    '''
+    Class to handle the task of detecting the markers (test/control) window out of image,
+    and producing new image that contain alligned (horizonal) image of the window.
+    '''
     def __init__(self, detection_model, args):
         self._detection_model = detection_model
         self._args = args
-        self._pattern_match = PatternMatch()
         self._names_dict = {}
         self._PLOT = False
 
@@ -190,11 +204,15 @@ class WindowDetector(object):
             # filter stick from background using kmeans
             if self._lines.shape[0]>20:
                 print ("more than 20 lines were found, probably bakground.. detecting angle by window")
+
+                '''
                 plt.imshow(stick)
                 for l in self._lines:
                     x,y,xb,yb = l[0]
                     plt.plot([x,xb],[y,yb])
                 plt.show()
+                '''
+
         if use_window or self._lines.shape[0]>20:
             x, y, x_b, y_b = self._box_window.xyxy.numpy()[0].astype(int)
             window = self._source_image[y:y_b, x:x_b]
@@ -291,9 +309,43 @@ class WindowDetector(object):
         plt.suptitle(os.path.split(self._fn)[1])
         plt.show()
 
+
+
+
+class PregnantTest(object):
+    def __init__(self,model,args):
+        self._model = model
+        self._args = args
+        self.window_detector = WindowDetector(model,args)
+        self.pattern_detector = PatternMatch(args)
+
+    def __call__(self, fn):
+        self._fn = fn
+
+    def detect_window(self):
+        self.window_detector(self._fn)
+
     def match_pattern(self):
-        window = window_detector.rotated_window
-        self._pattern_match(window)
+        window = self.window_detector.rotated_window
+        self.pattern_detector(window)
+
+    def save_patterns(self):
+        try:
+            pattern = self.pattern_detector.marker_candidates
+            output_path = self._args.output_path
+            assert output_path != None, "please add --output_path to cml"
+            pattern_out_path = f"{output_path}/markers/"
+            os.makedirs(pattern_out_path, exist_ok=True)
+            fn = pattern_out_path + os.path.split(self._fn)[1]
+            cv2.imwrite(fn, self.pattern_detector.marker_candidates)
+
+            window_out_path = f"{output_path}/window/"
+            os.makedirs(window_out_path, exist_ok=True)
+            fn = window_out_path + os.path.split(self._fn)[1]
+            cv2.imwrite(fn, self.pattern_detector._standard_window)
+            logging.info(f"saved patterns into {output_path}")
+        except Exception as e:
+            raise Exception(e)
 
 
 if __name__ == "__main__":
@@ -301,25 +353,63 @@ if __name__ == "__main__":
     parser.add_argument("--data_path")
     parser.add_argument("--file", required=False, help="single file to run")
     parser.add_argument('-o','--output_path',help='path to save outputs', default=None)
-
     args = parser.parse_args()
+
+    #  --- save command line ---
+    if not os.path.exists(args.output_path):
+        os.mkdir(args.output_path)
+    howto_fn = f"{args.output_path}/howto.txt"
+    with open(howto_fn, 'w') as f:
+        f.write(" ".join(sys.argv) + os.linesep)
+    # ---------------------------
+
+    # --------- load images list --------
     if args.file:
         images = [f"{args.data_path}/{args.file}.jpg"]
     else:
         images = glob.glob(f"{args.data_path}/*")
         images = np.random.permutation(images)
+    # ---------------------------
 
-    window_detector = WindowDetector(model, args)
+    # init
+    pregnant_test = PregnantTest(model, args)
+    success = []
+    fail = []
 
+    # -- main loop --
+    progress_bar = tqdm(images, total=len(images))
     for im in images:
-        try:
-            window_detector(im)
-            window_detector.plot_rotation_model()
-            window_detector.plot()
-
-            window_detector.match_pattern()
-
-        except Exception as e:
-            print(e)
+        progress_bar.set_description(f"Processing {im}")
+        progress_bar.update()
+        pattern_out_path = f"{args.output_path}/markers/"
+        fn = pattern_out_path + os.path.split(im)[1]
+        if os.path.exists(fn):
+            print(f"{fn} exist...")
             continue
+
+        try:
+            pregnant_test(im)
+            pregnant_test.detect_window()
+            pregnant_test.match_pattern()
+            pregnant_test.save_patterns()
+            # pregnant_test.pattern_detector.plot()
+            print(f"{OKCYAN}\nsuccessfully detected patterns{ENDC}")
+            success.append(im)
+        except Exception as e:
+            print(f"{FAIL}e{ENDC}")
+            fail.append(f"{im} {e}")
         continue
+    progress_bar.close()
+    # -- /main loop ---
+
+    # ---- Save summary ----
+    success_fn = f"{args.output_path}/success.txt"
+    with open(success_fn,'w') as f:
+        f.write("\n".join(success)+ os.linesep)
+    print(f"{len(success)}, saved into {success_fn}")
+
+    fail_fn = f"{args.output_path}/fail.txt"
+    with open(fail_fn,'w') as f:
+        f.write("\n".join(fail)+ os.linesep)
+    print(f"{len(fail)}, saved into {fail_fn}")
+    # /---- Save summary ----
