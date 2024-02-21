@@ -4,3 +4,6 @@
 /.idea/*
 /yolov8n.pt
 /yolov8s.pt
+/__pycache__/*
+/checkpoints/.*
+/checkpoints/*
