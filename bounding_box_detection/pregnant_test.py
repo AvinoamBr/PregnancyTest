@@ -384,6 +384,7 @@ if __name__ == "__main__":
         pattern_out_path = f"{args.output_path}/markers/"
         fn = pattern_out_path + os.path.split(im)[1]
         if os.path.exists(fn):
+        if os.path.exists(fn) and args.skip_exist:
             print(f"{fn} exist...")
             continue
 
