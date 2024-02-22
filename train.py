@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 import tensorflow as tf
 from matplotlib import pyplot as plt
 
-from consts import EPOCHS
+from consts import EPOCHS, CHECKPOINT_PATH
 from markers_model import markers_model, INPUT_IMAGE_SHAPE
 
 
