@@ -13,13 +13,12 @@ text_color = TextColors()
 
 
 # yolo model arguments
-YOLO_CP = "/home/avinoam/Desktop/autobrains/DL_Engineer/assignment_files/runs/detect/train14/weights/best.pt"
-
+YOLO_CP = "window_detector/weights/best.pt"
 STICKS = 'Sticks'
 INNER_WINDOW = "inner_window"
 WINDOW = 'window'
 OBJECT_DETECTION_CLASS_NAMES = [STICKS, INNER_WINDOW, WINDOW]
-
+TOLO_EPOCHS = 100
 # markers model arguments
 CLASS_NAMES = ['positive','negative']
 TRAIN_DATA_PATH = "../data/patterns/train"

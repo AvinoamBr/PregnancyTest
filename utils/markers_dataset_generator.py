@@ -7,7 +7,9 @@ import numpy as np
 from tqdm import tqdm
 
 from consts import text_color
-from pregnant_detector import PregnantTest
+from pregnant_detector.pregnant_detector import PregnantTest
+
+# from pregnant_detector import PregnantTest
 
 
 '''

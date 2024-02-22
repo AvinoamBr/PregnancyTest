@@ -1,15 +1,12 @@
 import argparse
-import glob
 import logging
 import os
-import sys
 
 import cv2
-from tqdm import tqdm
 import numpy as np
 from ultralytics import YOLO
 
-from consts import text_color, YOLO_CP, CHECKPOINT_PATH, CLASS_NAMES, CLASS_CONF_THRESH
+from consts import text_color, YOLO_CP, CHECKPOINT_PATH, CLASS_CONF_THRESH
 
 from window_detector.window_detector import WindowDetector
 from markers_detector.markers_detector import MarkersDetector

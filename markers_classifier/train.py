@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 import tensorflow as tf
 from matplotlib import pyplot as plt
 
-from consts import EPOCHS, CHECKPOINT_PATH
+from consts import YOLO_EPOCHS, YOLO_CP
 from markers_classifier.markers_model import markers_model, INPUT_IMAGE_SHAPE
 
 
@@ -69,7 +69,7 @@ class TrainModel(object):
                          metrics=['accuracy'])
 
         self._model.summary()
-        epochs=EPOCHS
+        epochs=YOLO_EPOCHS
         history = self._model.fit(
             self._train_ds,
             validation_data=self._val_ds,
@@ -88,7 +88,7 @@ class TrainModel(object):
         loss = history.history['loss']
         val_loss = history.history['val_loss']
 
-        epochs_range = range(EPOCHS)
+        epochs_range = range(YOLO_EPOCHS)
 
         plt.figure(figsize=(8, 8))
         plt.subplot(1, 2, 1)
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-t","--data_path")
     parser.add_argument("-c", "--cp",help="load from check point", default=None)
-    parser.add_argument("--save_to", help="model checkpoint", default=CHECKPOINT_PATH)
+    parser.add_argument("--save_to", help="model checkpoint", default=YOLO_CP)
     args = parser.parse_args()
 
     train_model = TrainModel()
