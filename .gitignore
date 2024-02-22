@@ -5,6 +5,11 @@
 /yolov8n.pt
 /yolov8s.pt
 /__pycache__/*
-/checkpoints/.*
-/checkpoints/*
+/markers_classifier/checkpoints/.*
+/markers_classifier/checkpoints/*
 /Salignostics20240221.zip
+/token.txt
+**/__pycache__*
+*/__pycache__/*
+*/*/__pycache__/*
+/*/*/__pycache__/*

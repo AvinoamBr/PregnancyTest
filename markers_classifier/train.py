@@ -4,7 +4,7 @@ import tensorflow as tf
 from matplotlib import pyplot as plt
 
 from consts import EPOCHS, CHECKPOINT_PATH
-from markers_model import markers_model, INPUT_IMAGE_SHAPE
+from markers_classifier.markers_model import markers_model, INPUT_IMAGE_SHAPE
 
 
 
@@ -64,7 +64,7 @@ class TrainModel(object):
             plt.show()
 
     def train(self):
-        self._model.compile(optimizer='adam',
+        self._model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.002),
                          loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                          metrics=['accuracy'])
 

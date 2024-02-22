@@ -24,7 +24,7 @@ To Train your own model: *---add explain here---*
 Markers model is a classical computer vision model, and is coded with it's params in code / configuration files.
 
 ## Markers Classifier Model
-Markers classifier model is declared in [markers_model.py](markers_model.py).\
+Markers classifier model is declared in [markers_model.py](markers_classifier/markers_model.py).\
 You can use pretrained weights.  copy *---add link---* to ```<my_path\marker_model_weights\>```\
 
 

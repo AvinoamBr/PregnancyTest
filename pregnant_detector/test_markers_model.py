@@ -1,17 +1,16 @@
 import os
 
 import cv2
-from matplotlib import pyplot
 import glob
 from argparse import ArgumentParser
 from consts import CHECKPOINT_PATH, INPUT_IMAGE_SHAPE
 import tensorflow as tf
 from tensorflow import keras
-from markers_model import markers_model
+from markers_classifier.markers_model import markers_model
 import numpy as np
 from matplotlib import pyplot as plt
 img_height, img_width = INPUT_IMAGE_SHAPE
-import tqdm
+
 
 class TestMarkersModel(object):
     def __init__(self, args):
