@@ -14,3 +14,4 @@
 */*/__pycache__/*
 /*/*/__pycache__/*
 /window_detector/weights/best.pt
+/bounding_box_detection/yolov8n.pt
