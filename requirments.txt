@@ -3,3 +3,4 @@ tqdm
 opencv-python
 ultralytics
 scikit-learn
+tensorflow
