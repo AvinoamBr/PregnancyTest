@@ -5,12 +5,12 @@ that receive image of detection stick, and return Positve/Negative status for th
 
 ## Three Steps Model
 
-A - Object detection:  Locate the stick and the exact window were markers are expected. Then
-aligning the window, so that it is directed horizontally.
+A - [YOLOv8](https://github.com/ultralytics/ultralyticsObject) based Object Detection Model:  Locate the stick and the exact window were markers are expected.
+Then croping the test window ans aligning it, so that it is directed horizontally.
 
-B - Markers Detection - Running pattern match algorithms to enhance pixels were it might be a marker.
+B - Markers Detection - Running Classical CV methods, as pattern match, to enhance pixels were markers can be found.
 
-C - Classification - Given the map of the potential markers, and their intensity,\
+C - Classification - Light CNN classification model. Given the map of the potential markers, and their intensity,
 classifying the test to be positive or negative. 
 
 # Visual example
